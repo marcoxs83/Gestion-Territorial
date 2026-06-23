@@ -369,6 +369,33 @@
             </div>
           </div>
           <div class="role-grid" id="roleGrid"></div>
+
+          <div class="database-panel">
+            <div class="section-heading compact">
+              <div>
+                <p class="eyebrow">Base de datos</p>
+                <h2>Conexion Supabase</h2>
+              </div>
+              <span class="db-status" id="databaseStatus">Modo local</span>
+            </div>
+            <form class="entry-form" id="databaseForm">
+              <div class="form-grid">
+                <label>
+                  URL del proyecto
+                  <input name="url" placeholder="https://xxxx.supabase.co" />
+                </label>
+                <label>
+                  Clave anon publica
+                  <input name="anonKey" type="password" placeholder="eyJhbGciOi..." />
+                </label>
+              </div>
+              <div class="form-actions">
+                <button class="secondary-button" id="syncDatabase" type="button">Sincronizar</button>
+                <button class="secondary-button" id="clearDatabaseConfig" type="button">Usar modo local</button>
+                <button class="primary-button" type="submit">Guardar conexion</button>
+              </div>
+            </form>
+          </div>
         </section>
       </main>
     </div>

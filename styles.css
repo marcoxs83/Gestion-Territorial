@@ -967,6 +967,40 @@ h2 {
   color: var(--muted);
 }
 
+.database-panel {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.db-status {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  width: fit-content;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #e7eef5;
+  color: var(--blue);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.db-status[data-mode="remote"] {
+  background: #e4f1ec;
+  color: var(--green-dark);
+}
+
+.db-status[data-mode="pending"] {
+  background: #fff2dc;
+  color: var(--amber);
+}
+
+.db-status[data-mode="error"] {
+  background: #f8e6e4;
+  color: var(--red);
+}
+
 .secondary-button {
   min-height: 38px;
   padding: 0 14px;

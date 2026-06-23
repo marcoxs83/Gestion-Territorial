@@ -182,6 +182,8 @@ const storageKeys = {
   demands: "territorio.demands",
   referents: "territorio.referents",
   googleApiKey: "territorio.googleMapsApiKey",
+  supabaseUrl: "territorio.supabaseUrl",
+  supabaseAnonKey: "territorio.supabaseAnonKey",
 };
 
 let demands = loadCollection(storageKeys.demands, defaultDemands);
@@ -222,6 +224,10 @@ const infrastructureGrid = document.querySelector("#infrastructureGrid");
 const peopleGrid = document.querySelector("#peopleGrid");
 const reportGrid = document.querySelector("#reportGrid");
 const roleGrid = document.querySelector("#roleGrid");
+const databaseForm = document.querySelector("#databaseForm");
+const databaseStatus = document.querySelector("#databaseStatus");
+const syncDatabase = document.querySelector("#syncDatabase");
+const clearDatabaseConfig = document.querySelector("#clearDatabaseConfig");
 
 let activeDemandFilter = "all";
 let activeNeighborhoodFilter = "all";
@@ -232,6 +238,7 @@ let leafletMap = null;
 let leafletDemandLayer = null;
 let leafletDraftMarker = null;
 let pickMode = "operativo";
+let databaseMode = "local";
 
 function normalize(value) {
   return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -258,6 +265,138 @@ function loadCollection(key, fallback) {
 
 function saveCollection(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
+}
+
+function getDatabaseConfig() {
+  return {
+    url: localStorage.getItem(storageKeys.supabaseUrl) || "",
+    anonKey: localStorage.getItem(storageKeys.supabaseAnonKey) || "",
+  };
+}
+
+function isDatabaseConfigured() {
+  const config = getDatabaseConfig();
+  return Boolean(config.url && config.anonKey);
+}
+
+function updateDatabaseStatus(message, mode = databaseMode) {
+  databaseMode = mode;
+  databaseStatus.textContent = message;
+  databaseStatus.dataset.mode = mode;
+}
+
+function demandToDb(item) {
+  return {
+    code: item.code,
+    title: item.title,
+    neighborhood: item.neighborhood,
+    owner: item.owner,
+    status: item.status,
+    status_label: item.statusLabel,
+    history: item.history,
+    location_label: item.locationLabel || null,
+    map_x: item.mapX,
+    map_y: item.mapY,
+    lat: item.lat,
+    lng: item.lng,
+  };
+}
+
+function demandFromDb(item) {
+  return {
+    code: item.code,
+    title: item.title,
+    neighborhood: item.neighborhood,
+    owner: item.owner,
+    status: item.status,
+    statusLabel: item.status_label,
+    history: item.history,
+    locationLabel: item.location_label || "",
+    mapX: item.map_x,
+    mapY: item.map_y,
+    lat: item.lat,
+    lng: item.lng,
+  };
+}
+
+function referentToDb(item) {
+  return {
+    name: item.name,
+    neighborhood: item.neighborhood,
+    phone: item.phone,
+    influence: item.influence,
+    meetings: item.meetings,
+  };
+}
+
+function referentFromDb(item) {
+  return {
+    name: item.name,
+    neighborhood: item.neighborhood,
+    phone: item.phone,
+    influence: item.influence,
+    meetings: item.meetings,
+  };
+}
+
+async function supabaseRequest(table, options = {}) {
+  const config = getDatabaseConfig();
+  const url = `${config.url.replace(/\/$/, "")}/rest/v1/${table}${options.query || ""}`;
+
+  const response = await fetch(url, {
+    method: options.method || "GET",
+    headers: {
+      apikey: config.anonKey,
+      Authorization: `Bearer ${config.anonKey}`,
+      "Content-Type": "application/json",
+      Prefer: options.prefer || "return=representation",
+    },
+    body: options.body ? JSON.stringify(options.body) : undefined,
+  });
+
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(message || `Error ${response.status}`);
+  }
+
+  if (response.status === 204) return null;
+  return response.json();
+}
+
+async function loadDatabaseData() {
+  if (!isDatabaseConfigured()) {
+    updateDatabaseStatus("Modo local", "local");
+    return;
+  }
+
+  try {
+    updateDatabaseStatus("Conectando...", "pending");
+    const [remoteDemands, remoteReferents] = await Promise.all([
+      supabaseRequest("demands", { query: "?select=*&order=created_at.desc" }),
+      supabaseRequest("referents", { query: "?select=*&order=created_at.desc" }),
+    ]);
+
+    demands = remoteDemands.map(demandFromDb);
+    referents = remoteReferents.map(referentFromDb);
+    saveCollection(storageKeys.demands, demands);
+    saveCollection(storageKeys.referents, referents);
+    updateDatabaseStatus("Conectado a Supabase", "remote");
+    renderAll();
+  } catch (error) {
+    updateDatabaseStatus("Sin conexion: usando modo local", "error");
+  }
+}
+
+async function saveDemandToDatabase(demand) {
+  if (!isDatabaseConfigured()) return null;
+  const rows = await supabaseRequest("demands", { method: "POST", body: demandToDb(demand) });
+  return rows && rows[0] ? demandFromDb(rows[0]) : demand;
+}
+
+async function saveReferentToDatabase(referent) {
+  if (!isDatabaseConfigured()) return null;
+  const rows = await supabaseRequest("referents", { method: "POST", body: referentToDb(referent) });
+  return rows && rows[0] ? referentFromDb(rows[0]) : referent;
 }
 
 function escapeHtml(value) {
@@ -699,7 +838,7 @@ function formValue(form, name) {
   return form.elements[name].value.trim();
 }
 
-function addDemand(event) {
+async function addDemand(event) {
   event.preventDefault();
 
   const status = formValue(demandForm, "status");
@@ -718,7 +857,15 @@ function addDemand(event) {
     history: formValue(demandForm, "history"),
   };
 
-  demands = [demand, ...demands];
+  try {
+    const savedDemand = await saveDemandToDatabase(demand);
+    demands = [savedDemand || demand, ...demands];
+    updateDatabaseStatus(isDatabaseConfigured() ? "Conectado a Supabase" : "Modo local", isDatabaseConfigured() ? "remote" : "local");
+  } catch (error) {
+    demands = [demand, ...demands];
+    updateDatabaseStatus("No se pudo guardar en Supabase: copia local", "error");
+  }
+
   saveCollection(storageKeys.demands, demands);
   demandForm.reset();
   clearLeafletDraftMarker();
@@ -728,7 +875,7 @@ function addDemand(event) {
   renderAll();
 }
 
-function addReferent(event) {
+async function addReferent(event) {
   event.preventDefault();
 
   const referent = {
@@ -739,7 +886,15 @@ function addReferent(event) {
     meetings: formValue(referentForm, "meetings"),
   };
 
-  referents = [referent, ...referents];
+  try {
+    const savedReferent = await saveReferentToDatabase(referent);
+    referents = [savedReferent || referent, ...referents];
+    updateDatabaseStatus(isDatabaseConfigured() ? "Conectado a Supabase" : "Modo local", isDatabaseConfigured() ? "remote" : "local");
+  } catch (error) {
+    referents = [referent, ...referents];
+    updateDatabaseStatus("No se pudo guardar en Supabase: copia local", "error");
+  }
+
   saveCollection(storageKeys.referents, referents);
   referentForm.reset();
   renderAll();
@@ -776,6 +931,25 @@ openDemandForm.addEventListener("click", () => {
 
 demandForm.addEventListener("submit", addDemand);
 referentForm.addEventListener("submit", addReferent);
+
+databaseForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const url = formValue(databaseForm, "url");
+  const anonKey = formValue(databaseForm, "anonKey");
+
+  localStorage.setItem(storageKeys.supabaseUrl, url);
+  localStorage.setItem(storageKeys.supabaseAnonKey, anonKey);
+  await loadDatabaseData();
+});
+
+syncDatabase.addEventListener("click", loadDatabaseData);
+
+clearDatabaseConfig.addEventListener("click", () => {
+  localStorage.removeItem(storageKeys.supabaseUrl);
+  localStorage.removeItem(storageKeys.supabaseAnonKey);
+  databaseForm.reset();
+  updateDatabaseStatus("Modo local", "local");
+});
 
 mapViewButtons.forEach((button) => {
   button.addEventListener("click", () => {
@@ -852,6 +1026,10 @@ if (savedGoogleKey) {
   googleApiKeyInput.value = savedGoogleKey;
 }
 
+const savedDatabaseConfig = getDatabaseConfig();
+databaseForm.elements.url.value = savedDatabaseConfig.url;
+databaseForm.elements.anonKey.value = savedDatabaseConfig.anonKey;
+
 syncButton.addEventListener("click", () => {
   syncButton.animate([{ transform: "rotate(0deg)" }, { transform: "rotate(360deg)" }], {
     duration: 520,
@@ -864,3 +1042,4 @@ searchInput.addEventListener("input", renderAll);
 populateNeighborhoodSelects();
 renderAgenda();
 renderAll();
+loadDatabaseData();

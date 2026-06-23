@@ -28,3 +28,17 @@ Esta version es un sitio web estatico. Se puede publicar en Netlify, Vercel, Git
 ## Importante
 
 Los datos cargados hoy se guardan en el navegador de cada usuario con `localStorage`. Para una version multiusuario real, con datos compartidos entre operadores, hace falta agregar backend y base de datos.
+
+## Base de datos con Supabase
+
+1. Crear un proyecto en https://supabase.com
+2. Abrir `SQL Editor`.
+3. Ejecutar el contenido de `supabase-schema.sql`.
+4. Ir a `Project Settings > API`.
+5. Copiar:
+   - Project URL
+   - anon public key
+6. En la plataforma abrir `Usuarios > Base de datos`.
+7. Pegar URL y clave, y guardar la conexion.
+
+Esta configuracion usa permisos publicos de lectura y carga para prototipo. Para produccion conviene agregar login y politicas por usuario.
