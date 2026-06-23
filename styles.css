@@ -428,6 +428,61 @@ h2 {
   height: 72vh;
 }
 
+.territory-leaflet-pin {
+  background: transparent;
+  border: 0;
+}
+
+.territory-leaflet-pin span {
+  position: relative;
+  display: block;
+  width: 30px;
+  height: 30px;
+  border: 3px solid #ffffff;
+  border-radius: 50% 50% 50% 0;
+  background: var(--green);
+  box-shadow: 0 10px 24px rgba(31, 43, 41, 0.25);
+  transform: rotate(-45deg);
+}
+
+.territory-leaflet-pin span::after {
+  position: absolute;
+  top: 7px;
+  left: 7px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ffffff;
+  content: "";
+}
+
+.territory-leaflet-pin.draft span {
+  background: var(--teal);
+  animation: pinPulse 900ms ease-in-out infinite alternate;
+}
+
+.territory-leaflet-pin.pendiente span {
+  background: var(--red);
+}
+
+.territory-leaflet-pin.gestion span {
+  background: var(--amber);
+}
+
+.territory-leaflet-pin.resuelto span {
+  background: var(--green);
+}
+
+@keyframes pinPulse {
+  from {
+    box-shadow: 0 10px 24px rgba(31, 43, 41, 0.22), 0 0 0 0 rgba(43, 135, 144, 0.3);
+  }
+
+  to {
+    box-shadow: 0 10px 24px rgba(31, 43, 41, 0.22), 0 0 0 10px rgba(43, 135, 144, 0);
+  }
+}
+
 .zone {
   stroke: #ffffff;
   stroke-width: 4;

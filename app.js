@@ -230,6 +230,7 @@ let googleScriptLoading = false;
 let googleDemandMarkers = [];
 let leafletMap = null;
 let leafletDemandLayer = null;
+let leafletDraftMarker = null;
 let pickMode = "operativo";
 
 function normalize(value) {
@@ -332,6 +333,37 @@ function setDemandLatLng(lat, lng) {
   leafletLocationBanner.textContent = `Ubicacion seleccionada: ${label}`;
 }
 
+function leafletPinIcon(className = "") {
+  return L.divIcon({
+    className: `territory-leaflet-pin ${className}`.trim(),
+    html: '<span aria-hidden="true"></span>',
+    iconSize: [32, 42],
+    iconAnchor: [16, 38],
+    popupAnchor: [0, -34],
+  });
+}
+
+function setLeafletDraftMarker(lat, lng) {
+  if (!leafletMap || !window.L) return;
+
+  if (!leafletDraftMarker) {
+    leafletDraftMarker = L.marker([lat, lng], {
+      icon: leafletPinIcon("draft"),
+      zIndexOffset: 1000,
+    }).addTo(leafletMap);
+  } else {
+    leafletDraftMarker.setLatLng([lat, lng]);
+  }
+
+  leafletDraftMarker.bindPopup("Ubicacion seleccionada").openPopup();
+}
+
+function clearLeafletDraftMarker() {
+  if (!leafletDraftMarker) return;
+  leafletDraftMarker.remove();
+  leafletDraftMarker = null;
+}
+
 function renderDemandMarkers() {
   demandMarkerLayer.innerHTML = demands
     .filter(demandHasLocation)
@@ -391,6 +423,7 @@ function initLeafletMap() {
   leafletMap.on("click", (event) => {
     pickMode = "leaflet";
     setDemandLatLng(event.latlng.lat, event.latlng.lng);
+    setLeafletDraftMarker(event.latlng.lat, event.latlng.lng);
     activateSection("demandas");
     demandForm.elements.title.focus();
     renderLeafletDemandMarkers();
@@ -405,6 +438,7 @@ function renderLeafletDemandMarkers() {
   leafletDemandLayer.clearLayers();
   demands.filter(demandHasLatLng).forEach((item) => {
     L.marker([Number(item.lat), Number(item.lng)])
+      .setIcon(leafletPinIcon(item.status))
       .bindPopup(`<strong>${escapeHtml(item.code)}</strong><br>${escapeHtml(item.title)}`)
       .addTo(leafletDemandLayer);
   });
@@ -687,6 +721,7 @@ function addDemand(event) {
   demands = [demand, ...demands];
   saveCollection(storageKeys.demands, demands);
   demandForm.reset();
+  clearLeafletDraftMarker();
   mapLocationBanner.textContent = "Haga clic sobre el mapa para ubicar la demanda.";
   leafletLocationBanner.textContent = "Haga clic sobre el mapa para ubicar la demanda.";
   googleLocationBanner.textContent = "Haga clic sobre Google Maps para ubicar la demanda.";
