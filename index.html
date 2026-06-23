@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Territorio | Sistema de gestion territorial</title>
+    <link rel="stylesheet" href="assets/leaflet/leaflet.css" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Navegacion principal">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">T</span>
+          <div>
+            <strong>Territorio</strong>
+            <span>Sistema municipal</span>
+          </div>
+        </div>
+
+        <nav class="nav-list">
+          <button class="nav-item active" type="button" data-section="mapa" title="Mapa interactivo">
+            <span aria-hidden="true">M</span>
+            <span>Mapa</span>
+          </button>
+          <button class="nav-item" type="button" data-section="barrios" title="Barrios">
+            <span aria-hidden="true">B</span>
+            <span>Barrios</span>
+          </button>
+          <button class="nav-item" type="button" data-section="poblacion" title="Poblacion">
+            <span aria-hidden="true">P</span>
+            <span>Poblacion</span>
+          </button>
+          <button class="nav-item" type="button" data-section="infraestructura" title="Infraestructura">
+            <span aria-hidden="true">I</span>
+            <span>Infraestructura</span>
+          </button>
+          <button class="nav-item" type="button" data-section="demandas" title="Demandas y pedidos">
+            <span aria-hidden="true">D</span>
+            <span>Demandas</span>
+          </button>
+          <button class="nav-item" type="button" data-section="referentes" title="Referentes barriales">
+            <span aria-hidden="true">R</span>
+            <span>Referentes</span>
+          </button>
+          <button class="nav-item" type="button" data-section="reportes" title="Reportes y estadisticas">
+            <span aria-hidden="true">E</span>
+            <span>Reportes</span>
+          </button>
+          <button class="nav-item" type="button" data-section="usuarios" title="Usuarios y roles">
+            <span aria-hidden="true">U</span>
+            <span>Usuarios</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <span>Municipio</span>
+          <strong>Distrito Norte</strong>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Sistema gestion territorial</p>
+            <h1 id="pageTitle">Mapa interactivo</h1>
+          </div>
+          <div class="topbar-actions">
+            <label class="search">
+              <span aria-hidden="true">⌕</span>
+              <input id="searchInput" type="search" placeholder="Buscar barrio, demanda o referente" />
+            </label>
+            <button class="icon-button" id="syncButton" type="button" title="Actualizar datos" aria-label="Actualizar datos">↻</button>
+            <button class="primary-button" id="openDemandForm" type="button">
+              <span aria-hidden="true">+</span>
+              Nueva demanda
+            </button>
+          </div>
+        </header>
+
+        <section class="kpi-grid" aria-label="Indicadores principales">
+          <article class="kpi">
+            <span>Barrios registrados</span>
+            <strong>116</strong>
+            <small>Plano municipal de barrios</small>
+          </article>
+          <article class="kpi">
+            <span>Habitantes relevados</span>
+            <strong>91.728</strong>
+            <small>Censo 2022 INDEC</small>
+          </article>
+          <article class="kpi">
+            <span>Demandas abiertas</span>
+            <strong>284</strong>
+            <small>62 vencen esta semana</small>
+          </article>
+          <article class="kpi">
+            <span>Servicios criticos</span>
+            <strong>14</strong>
+            <small>Agua, cloacas y accesos</small>
+          </article>
+        </section>
+
+        <section class="module active" id="module-mapa" data-title="Mapa interactivo">
+          <section class="layout-grid">
+            <section class="map-panel" aria-labelledby="mapTitle">
+              <div class="section-heading">
+                <div>
+                  <p class="eyebrow">Visualizacion territorial</p>
+                  <h2 id="mapTitle">Barrios con indicadores</h2>
+                </div>
+                <div class="segmented" role="tablist" aria-label="Capa de mapa">
+                  <button class="segment active" type="button" data-map-view="operativo">Operativo</button>
+                  <button class="segment" type="button" data-map-view="leaflet">Leaflet</button>
+                  <button class="segment" type="button" data-map-view="google">Google Maps</button>
+                  <button class="segment" type="button" data-map-view="plano">Plano 116 barrios</button>
+                </div>
+              </div>
+
+              <div class="territory-map eldorado-map map-view active" id="territoryMap" data-view="operativo" aria-label="Mapa esquematico de Eldorado">
+                <svg viewBox="0 0 720 460" role="img" aria-labelledby="svgTitle svgDesc">
+                  <title id="svgTitle">Mapa de distritos de Eldorado</title>
+                  <desc id="svgDesc">Distritos esquematicos de Eldorado organizados por kilometros y zonas este-oeste.</desc>
+                  <path class="river" d="M84 18 C58 92, 96 142, 70 206 C42 276, 76 338, 52 442" />
+                  <path class="zone zone-a" data-zone="Distrito Costanera Km 1-2" d="M112 44 L286 34 L308 122 L260 178 L114 158 L88 92 Z" />
+                  <path class="zone zone-b" data-zone="Distrito Centro Km 3-4" d="M304 40 L478 66 L488 168 L370 206 L304 126 Z" />
+                  <path class="zone zone-c" data-zone="Distrito Oeste Km 5-6" d="M116 168 L260 184 L350 236 L312 332 L140 314 L86 240 Z" />
+                  <path class="zone zone-d" data-zone="Distrito Belgrano Km 7-8" d="M364 212 L492 176 L632 224 L602 326 L444 342 L314 334 Z" />
+                  <path class="zone zone-e" data-zone="Distrito Centro Civico Km 9" d="M148 326 L314 342 L430 356 L398 426 L176 414 Z" />
+                  <path class="zone zone-f" data-zone="Distrito Pinares y Roulet" d="M438 354 L602 334 L670 396 L594 442 L402 430 Z" />
+                  <path class="zone zone-g" data-zone="Zona Este RN12" d="M486 72 L650 112 L674 214 L634 214 L492 166 Z" />
+                  <path class="route rn12" d="M238 40 C310 118, 372 180, 440 244 C512 310, 562 366, 642 426" />
+                  <path class="route rp17" d="M140 266 C238 242, 344 232, 464 254 C548 270, 606 266, 660 236" />
+                  <text class="map-label river-label" x="22" y="214">Rio Parana</text>
+                  <text class="map-label" x="236" y="82">Km 1-2</text>
+                  <text class="map-label" x="380" y="128">Km 3-4</text>
+                  <text class="map-label" x="188" y="258">Km 5-6</text>
+                  <text class="map-label" x="462" y="274">Km 7-8</text>
+                  <text class="map-label" x="246" y="386">Km 9</text>
+                  <text class="map-label" x="514" y="394">Pinares</text>
+                  <text class="map-label route-label" x="500" y="180">RN 12</text>
+                  <circle class="marker critical" cx="566" cy="282" r="13" data-label="Demanda critica: acceso y drenaje" />
+                  <circle class="marker active" cx="386" cy="202" r="10" data-label="Obra vial sobre eje central" />
+                  <circle class="marker warning" cx="154" cy="252" r="11" data-label="Regularizacion de servicios" />
+                  <circle class="marker active" cx="526" cy="388" r="9" data-label="Equipamiento urbano Pinares" />
+                  <g id="demandMarkerLayer" aria-label="Demandas georreferenciadas"></g>
+                </svg>
+                <div class="map-tooltip" id="mapTooltip">Eldorado · distritos por kilometros</div>
+                <div class="map-location-banner" id="mapLocationBanner">
+                  Haga clic sobre el mapa para ubicar la demanda.
+                </div>
+              </div>
+
+              <div class="official-plan map-view" data-view="plano" aria-label="Plano municipal de delimitacion de barrios">
+                <object data="assets/plano-116-barrios-eldorado.pdf" type="application/pdf">
+                  <a href="assets/plano-116-barrios-eldorado.pdf">Abrir plano municipal de barrios de Eldorado</a>
+                </object>
+              </div>
+
+              <div class="leaflet-map-panel map-view" data-view="leaflet" aria-label="Mapa Leaflet para georreferenciar demandas">
+                <div class="leaflet-map" id="leafletMap"></div>
+                <div class="map-location-banner" id="leafletLocationBanner">
+                  Haga clic sobre el mapa para ubicar la demanda.
+                </div>
+              </div>
+
+              <div class="google-map-panel map-view" data-view="google" aria-label="Mapa de Google Maps para georreferenciar demandas">
+                <div class="google-key-panel" id="googleKeyPanel">
+                  <div>
+                    <strong>Google Maps</strong>
+                    <span>Ingrese la clave de Google Maps Platform para activar el mapa satelital/callejero.</span>
+                  </div>
+                  <label>
+                    Clave API
+                    <input id="googleApiKey" type="password" placeholder="Pegar clave de Google Maps" />
+                  </label>
+                  <button class="primary-button" id="saveGoogleKey" type="button">Activar mapa</button>
+                </div>
+                <div class="google-map" id="googleMap"></div>
+                <div class="map-location-banner" id="googleLocationBanner">
+                  Haga clic sobre Google Maps para ubicar la demanda.
+                </div>
+              </div>
+
+              <div class="legend" aria-label="Referencias">
+                <span><i class="legend-box high"></i> Prioridad alta</span>
+                <span><i class="legend-box medium"></i> Seguimiento</span>
+                <span><i class="legend-box low"></i> Situacion estable</span>
+                <span><i class="legend-dot"></i> Intervencion</span>
+              </div>
+            </section>
+
+            <aside class="activity-panel" aria-labelledby="agendaTitle">
+              <div class="section-heading compact">
+                <div>
+                  <p class="eyebrow">Agenda territorial</p>
+                  <h2 id="agendaTitle">Proximas acciones</h2>
+                </div>
+              </div>
+              <div class="timeline" id="timelineList"></div>
+            </aside>
+          </section>
+        </section>
+
+        <section class="module" id="module-barrios" data-title="Barrios">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Ficha barrial</p>
+              <h2>Barrios registrados</h2>
+            </div>
+            <div class="filters" aria-label="Prioridad de barrio">
+              <button class="filter active" type="button" data-neighborhood-filter="all">Todos</button>
+              <button class="filter" type="button" data-neighborhood-filter="Alta">Alta</button>
+              <button class="filter" type="button" data-neighborhood-filter="Media">Media</button>
+              <button class="filter" type="button" data-neighborhood-filter="Baja">Baja</button>
+            </div>
+          </div>
+          <div class="neighborhood-grid" id="neighborhoodGrid"></div>
+        </section>
+
+        <section class="module" id="module-poblacion" data-title="Poblacion">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Datos sociales</p>
+              <h2>Poblacion por barrio</h2>
+            </div>
+          </div>
+          <div class="source-note">
+            Total departamental actualizado a 91.728 habitantes segun Censo 2022. La distribucion por distrito es operativa y se puede reemplazar con datos barrio por barrio.
+          </div>
+          <div class="insight-grid" id="populationGrid"></div>
+        </section>
+
+        <section class="module" id="module-infraestructura" data-title="Infraestructura">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Servicios y equipamiento</p>
+              <h2>Estado de infraestructura</h2>
+            </div>
+          </div>
+          <div class="infrastructure-grid" id="infrastructureGrid"></div>
+        </section>
+
+        <section class="module" id="module-demandas" data-title="Demandas y pedidos">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Gestion diaria</p>
+              <h2>Demandas y pedidos</h2>
+            </div>
+            <div class="filters" aria-label="Filtros">
+              <button class="filter active" type="button" data-demand-filter="all">Todas</button>
+              <button class="filter" type="button" data-demand-filter="pendiente">Pendiente</button>
+              <button class="filter" type="button" data-demand-filter="gestion">En gestion</button>
+              <button class="filter" type="button" data-demand-filter="resuelto">Resuelto</button>
+            </div>
+          </div>
+
+          <form class="entry-form" id="demandForm">
+            <div class="form-grid">
+              <label>
+                Demanda
+                <input name="title" required placeholder="Ej. Reparacion de calle" />
+              </label>
+              <label>
+                Barrio o distrito
+                <select name="neighborhood" id="demandNeighborhood" required></select>
+              </label>
+              <label>
+                Responsable
+                <input name="owner" required placeholder="Area o persona responsable" />
+              </label>
+              <label>
+                Estado
+                <select name="status" required>
+                  <option value="pendiente">Pendiente</option>
+                  <option value="gestion">En gestion</option>
+                  <option value="resuelto">Resuelto</option>
+                </select>
+              </label>
+              <div class="form-wide location-fields">
+                <label>
+                  Ubicacion en mapa
+                <input name="locationLabel" readonly placeholder="Sin georreferenciar" />
+              </label>
+              <input name="mapX" type="hidden" />
+              <input name="mapY" type="hidden" />
+              <input name="lat" type="hidden" />
+              <input name="lng" type="hidden" />
+              <button class="secondary-button" id="pickDemandLocation" type="button">Georreferenciar en mapa</button>
+            </div>
+              <label class="form-wide">
+                Ultima gestion / historial
+                <textarea name="history" rows="3" required placeholder="Detalle breve de la gestion realizada o pendiente"></textarea>
+              </label>
+            </div>
+            <div class="form-actions">
+              <button class="secondary-button" type="reset">Limpiar</button>
+              <button class="primary-button" type="submit">Guardar demanda</button>
+            </div>
+          </form>
+
+          <div class="case-table" role="table" aria-label="Listado de demandas territoriales">
+            <div class="table-row table-head" role="row">
+              <span role="columnheader">Demanda</span>
+              <span role="columnheader">Barrio</span>
+              <span role="columnheader">Responsable</span>
+              <span role="columnheader">Estado</span>
+              <span role="columnheader">Ubicacion</span>
+              <span role="columnheader">Ultima gestion</span>
+            </div>
+            <div id="demandRows"></div>
+          </div>
+        </section>
+
+        <section class="module" id="module-referentes" data-title="Referentes barriales">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Articulacion comunitaria</p>
+              <h2>Referentes barriales</h2>
+            </div>
+          </div>
+          <form class="entry-form" id="referentForm">
+            <div class="form-grid">
+              <label>
+                Nombre y apellido
+                <input name="name" required placeholder="Ej. Maria Gonzalez" />
+              </label>
+              <label>
+                Barrio o distrito
+                <select name="neighborhood" id="referentNeighborhood" required></select>
+              </label>
+              <label>
+                Telefono
+                <input name="phone" required placeholder="+54 9 3751 ..." />
+              </label>
+              <label>
+                Zona de influencia
+                <input name="influence" required placeholder="Sector, manzanas o zona" />
+              </label>
+              <label class="form-wide">
+                Historial de reuniones
+                <textarea name="meetings" rows="3" required placeholder="Ultima reunion, acuerdos o temas pendientes"></textarea>
+              </label>
+            </div>
+            <div class="form-actions">
+              <button class="secondary-button" type="reset">Limpiar</button>
+              <button class="primary-button" type="submit">Guardar referente</button>
+            </div>
+          </form>
+          <div class="people-grid" id="peopleGrid"></div>
+        </section>
+
+        <section class="module" id="module-reportes" data-title="Reportes y estadisticas">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Tablero municipal</p>
+              <h2>Reportes y estadisticas</h2>
+            </div>
+            <button class="secondary-button" type="button">Exportar datos</button>
+          </div>
+          <div class="report-grid" id="reportGrid"></div>
+        </section>
+
+        <section class="module" id="module-usuarios" data-title="Usuarios y roles">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Seguridad</p>
+              <h2>Usuarios y roles</h2>
+            </div>
+          </div>
+          <div class="role-grid" id="roleGrid"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="assets/leaflet/leaflet.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
