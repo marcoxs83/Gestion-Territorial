@@ -42,3 +42,5 @@ Los datos cargados hoy se guardan en el navegador de cada usuario con `localStor
 7. Pegar URL y clave, y guardar la conexion.
 
 Esta configuracion usa permisos publicos de lectura y carga para prototipo. Para produccion conviene agregar login y politicas por usuario.
+
+El esquema crea tablas para `demands`, `referents` y `meetings`.

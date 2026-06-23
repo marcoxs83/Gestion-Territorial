@@ -162,6 +162,20 @@ const defaultReferents = [
   { name: "Mario Benitez", neighborhood: "Distrito Pinares y Roulet", phone: "+54 9 3751 612-044", communityRole: "Presidente de comision vecinal", influence: "Pinares, Roulet y borde sur", meetings: "Ultima reunion: 08 Jun" },
 ];
 
+const defaultMeetings = [
+  {
+    title: "Mesa barrial por servicios y accesos",
+    date: "2026-06-20",
+    neighborhood: "Distrito Oeste Km 5-6",
+    participantNames: ["Carlos Vera", "Lucia Pereyra"],
+    attendeeCount: 18,
+    topics: "Estado de calles, extension de red cloacal y pedidos de iluminacion.",
+    locationLabel: "Leaflet · -26.408404, -54.635868",
+    lat: -26.408404,
+    lng: -54.635868,
+  },
+];
+
 const roles = [
   { role: "Administrador", scope: "Gestion completa del sistema, usuarios, catalogos y configuracion.", access: "Lectura, escritura, exportacion y permisos" },
   { role: "Analista territorial", scope: "Carga y seguimiento de barrios, demandas, indicadores y reuniones.", access: "Lectura, escritura y reportes" },
@@ -181,6 +195,7 @@ const zoneTotals = {
 const storageKeys = {
   demands: "territorio.demands",
   referents: "territorio.referents",
+  meetings: "territorio.meetings",
   googleApiKey: "territorio.googleMapsApiKey",
   supabaseUrl: "territorio.supabaseUrl",
   supabaseAnonKey: "territorio.supabaseAnonKey",
@@ -188,6 +203,7 @@ const storageKeys = {
 
 let demands = loadCollection(storageKeys.demands, defaultDemands);
 let referents = loadCollection(storageKeys.referents, defaultReferents);
+let meetings = loadCollection(storageKeys.meetings, defaultMeetings);
 
 const pageTitle = document.querySelector("#pageTitle");
 const searchInput = document.querySelector("#searchInput");
@@ -215,13 +231,18 @@ const demandRows = document.querySelector("#demandRows");
 const demandForm = document.querySelector("#demandForm");
 const pickDemandLocation = document.querySelector("#pickDemandLocation");
 const referentForm = document.querySelector("#referentForm");
+const meetingForm = document.querySelector("#meetingForm");
 const demandNeighborhood = document.querySelector("#demandNeighborhood");
 const referentNeighborhood = document.querySelector("#referentNeighborhood");
+const meetingNeighborhood = document.querySelector("#meetingNeighborhood");
+const meetingParticipants = document.querySelector("#meetingParticipants");
+const pickMeetingLocation = document.querySelector("#pickMeetingLocation");
 const timelineList = document.querySelector("#timelineList");
 const neighborhoodGrid = document.querySelector("#neighborhoodGrid");
 const populationGrid = document.querySelector("#populationGrid");
 const infrastructureGrid = document.querySelector("#infrastructureGrid");
 const peopleGrid = document.querySelector("#peopleGrid");
+const meetingGrid = document.querySelector("#meetingGrid");
 const reportGrid = document.querySelector("#reportGrid");
 const roleGrid = document.querySelector("#roleGrid");
 const databaseForm = document.querySelector("#databaseForm");
@@ -238,6 +259,7 @@ let leafletMap = null;
 let leafletDemandLayer = null;
 let leafletDraftMarker = null;
 let pickMode = "operativo";
+let locationPickTarget = "demand";
 let databaseMode = "local";
 
 function normalize(value) {
@@ -345,6 +367,34 @@ function referentFromDb(item) {
   };
 }
 
+function meetingToDb(item) {
+  return {
+    title: item.title,
+    meeting_date: item.date,
+    neighborhood: item.neighborhood,
+    participant_names: item.participantNames || [],
+    attendee_count: item.attendeeCount,
+    topics: item.topics,
+    location_label: item.locationLabel || null,
+    lat: item.lat,
+    lng: item.lng,
+  };
+}
+
+function meetingFromDb(item) {
+  return {
+    title: item.title,
+    date: item.meeting_date,
+    neighborhood: item.neighborhood,
+    participantNames: item.participant_names || [],
+    attendeeCount: item.attendee_count,
+    topics: item.topics,
+    locationLabel: item.location_label || "",
+    lat: item.lat,
+    lng: item.lng,
+  };
+}
+
 async function supabaseRequest(table, options = {}) {
   const config = getDatabaseConfig();
   const url = `${normalizeSupabaseUrl(config.url)}/rest/v1/${table}${options.query || ""}`;
@@ -377,16 +427,27 @@ async function loadDatabaseData() {
 
   try {
     updateDatabaseStatus("Conectando...", "pending");
-    const [remoteDemands, remoteReferents] = await Promise.all([
+    const [remoteDemands, remoteReferents, remoteMeetings] = await Promise.allSettled([
       supabaseRequest("demands", { query: "?select=*&order=created_at.desc" }),
       supabaseRequest("referents", { query: "?select=*&order=created_at.desc" }),
+      supabaseRequest("meetings", { query: "?select=*&order=meeting_date.desc,created_at.desc" }),
     ]);
 
-    demands = remoteDemands.map(demandFromDb);
-    referents = remoteReferents.map(referentFromDb);
+    if (remoteDemands.status === "fulfilled") {
+      demands = remoteDemands.value.map(demandFromDb);
+    }
+    if (remoteReferents.status === "fulfilled") {
+      referents = remoteReferents.value.map(referentFromDb);
+    }
+    if (remoteMeetings.status === "fulfilled") {
+      meetings = remoteMeetings.value.map(meetingFromDb);
+    }
+
     saveCollection(storageKeys.demands, demands);
     saveCollection(storageKeys.referents, referents);
-    updateDatabaseStatus("Conectado a Supabase", "remote");
+    saveCollection(storageKeys.meetings, meetings);
+    const failedTables = [remoteDemands, remoteReferents, remoteMeetings].filter((result) => result.status === "rejected").length;
+    updateDatabaseStatus(failedTables ? "Conexion parcial: revisar tablas" : "Conectado a Supabase", failedTables ? "error" : "remote");
     renderAll();
   } catch (error) {
     updateDatabaseStatus("Sin conexion: usando modo local", "error");
@@ -403,6 +464,12 @@ async function saveReferentToDatabase(referent) {
   if (!isDatabaseConfigured()) return null;
   const rows = await supabaseRequest("referents", { method: "POST", body: referentToDb(referent) });
   return rows && rows[0] ? referentFromDb(rows[0]) : referent;
+}
+
+async function saveMeetingToDatabase(meeting) {
+  if (!isDatabaseConfigured()) return null;
+  const rows = await supabaseRequest("meetings", { method: "POST", body: meetingToDb(meeting) });
+  return rows && rows[0] ? meetingFromDb(rows[0]) : meeting;
 }
 
 function escapeHtml(value) {
@@ -475,6 +542,14 @@ function setDemandLatLng(lat, lng) {
   demandForm.elements.lng.value = lng.toFixed(6);
   demandForm.elements.locationLabel.value = label;
   googleLocationBanner.textContent = `Ubicacion seleccionada: ${label}`;
+  leafletLocationBanner.textContent = `Ubicacion seleccionada: ${label}`;
+}
+
+function setMeetingLatLng(lat, lng) {
+  const label = `Leaflet · ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+  meetingForm.elements.lat.value = lat.toFixed(6);
+  meetingForm.elements.lng.value = lng.toFixed(6);
+  meetingForm.elements.locationLabel.value = label;
   leafletLocationBanner.textContent = `Ubicacion seleccionada: ${label}`;
 }
 
@@ -567,10 +642,16 @@ function initLeafletMap() {
 
   leafletMap.on("click", (event) => {
     pickMode = "leaflet";
-    setDemandLatLng(event.latlng.lat, event.latlng.lng);
     setLeafletDraftMarker(event.latlng.lat, event.latlng.lng);
-    activateSection("demandas");
-    demandForm.elements.title.focus();
+    if (locationPickTarget === "meeting") {
+      setMeetingLatLng(event.latlng.lat, event.latlng.lng);
+      activateSection("reuniones");
+      meetingForm.elements.title.focus();
+    } else {
+      setDemandLatLng(event.latlng.lat, event.latlng.lng);
+      activateSection("demandas");
+      demandForm.elements.title.focus();
+    }
     renderLeafletDemandMarkers();
   });
 
@@ -640,6 +721,23 @@ function populateNeighborhoodSelects() {
 
   demandNeighborhood.innerHTML = options;
   referentNeighborhood.innerHTML = options;
+  meetingNeighborhood.innerHTML = options;
+}
+
+function populateMeetingParticipants() {
+  meetingParticipants.innerHTML = referents
+    .map((item) => `<option value="${escapeHtml(item.name)}">${escapeHtml(item.name)} · ${escapeHtml(item.communityRole || item.neighborhood)}</option>`)
+    .join("");
+}
+
+function selectedOptions(select) {
+  return Array.from(select.selectedOptions).map((option) => option.value);
+}
+
+function formatDate(value) {
+  if (!value) return "";
+  const [year, month, day] = value.split("-");
+  return `${day}/${month}/${year}`;
 }
 
 function renderAgenda() {
@@ -781,6 +879,46 @@ function renderReferents() {
     .join("");
 }
 
+function renderMeetings() {
+  const visible = meetings.filter((item) =>
+    matchesQuery([item.title, item.neighborhood, (item.participantNames || []).join(" "), item.topics, item.locationLabel || ""]),
+  );
+
+  meetingGrid.innerHTML = visible.length
+    ? visible
+        .map(
+          (item) => `
+            <article class="meeting-card">
+              <header>
+                <strong>${escapeHtml(item.title)}</strong>
+                <span>${escapeHtml(formatDate(item.date))}</span>
+              </header>
+              <p>${escapeHtml(item.neighborhood)}</p>
+              <dl>
+                <div>
+                  <dt>Participantes principales</dt>
+                  <dd>${escapeHtml((item.participantNames || []).join(", ") || "Sin participantes vinculados")}</dd>
+                </div>
+                <div>
+                  <dt>Cantidad de participantes</dt>
+                  <dd>${escapeHtml(item.attendeeCount || 0)}</dd>
+                </div>
+                <div>
+                  <dt>Lugar</dt>
+                  <dd>${escapeHtml(item.locationLabel || "Sin georreferenciar")}</dd>
+                </div>
+                <div>
+                  <dt>Temas tratados</dt>
+                  <dd>${escapeHtml(item.topics)}</dd>
+                </div>
+              </dl>
+            </article>
+          `,
+        )
+        .join("")
+    : '<div class="empty-state">No hay reuniones registradas.</div>';
+}
+
 function renderReports() {
   const highPriority = neighborhoods.filter((item) => item.priority === "Alta").length;
   const openDemands = demands.filter((item) => item.status !== "resuelto").length;
@@ -827,7 +965,9 @@ function renderAll() {
   renderDemandMarkers();
   renderLeafletDemandMarkers();
   renderGoogleDemandMarkers();
+  populateMeetingParticipants();
   renderReferents();
+  renderMeetings();
   renderReports();
   renderRoles();
 }
@@ -908,6 +1048,37 @@ async function addReferent(event) {
   renderAll();
 }
 
+async function addMeeting(event) {
+  event.preventDefault();
+
+  const meeting = {
+    title: formValue(meetingForm, "title"),
+    date: formValue(meetingForm, "date"),
+    neighborhood: formValue(meetingForm, "neighborhood"),
+    participantNames: selectedOptions(meetingParticipants),
+    attendeeCount: Number(formValue(meetingForm, "attendeeCount")),
+    topics: formValue(meetingForm, "topics"),
+    locationLabel: formValue(meetingForm, "locationLabel"),
+    lat: formValue(meetingForm, "lat") ? Number(formValue(meetingForm, "lat")) : null,
+    lng: formValue(meetingForm, "lng") ? Number(formValue(meetingForm, "lng")) : null,
+  };
+
+  try {
+    const savedMeeting = await saveMeetingToDatabase(meeting);
+    meetings = [savedMeeting || meeting, ...meetings];
+    updateDatabaseStatus(isDatabaseConfigured() ? "Conectado a Supabase" : "Modo local", isDatabaseConfigured() ? "remote" : "local");
+  } catch (error) {
+    meetings = [meeting, ...meetings];
+    updateDatabaseStatus("No se pudo guardar en Supabase: copia local", "error");
+  }
+
+  saveCollection(storageKeys.meetings, meetings);
+  meetingForm.reset();
+  clearLeafletDraftMarker();
+  leafletLocationBanner.textContent = "Haga clic sobre el mapa para ubicar la demanda.";
+  renderAll();
+}
+
 document.querySelectorAll("[data-demand-filter]").forEach((button) => {
   button.addEventListener("click", () => {
     document.querySelectorAll("[data-demand-filter]").forEach((item) => item.classList.remove("active"));
@@ -939,6 +1110,7 @@ openDemandForm.addEventListener("click", () => {
 
 demandForm.addEventListener("submit", addDemand);
 referentForm.addEventListener("submit", addReferent);
+meetingForm.addEventListener("submit", addMeeting);
 
 databaseForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -989,6 +1161,7 @@ markers.forEach((marker) => {
 });
 
 pickDemandLocation.addEventListener("click", () => {
+  locationPickTarget = "demand";
   activateSection("mapa");
   const googleReady = Boolean(window.google && window.google.maps && googleMap);
   const leafletReady = Boolean(window.L);
@@ -1007,6 +1180,17 @@ pickDemandLocation.addEventListener("click", () => {
     mapLocationBanner.classList.add("active");
     mapLocationBanner.textContent = "Haga clic sobre el distrito donde se ubica la demanda.";
   }
+});
+
+pickMeetingLocation.addEventListener("click", () => {
+  locationPickTarget = "meeting";
+  activateSection("mapa");
+  pickMode = "leaflet";
+  mapViewButtons.forEach((item) => item.classList.toggle("active", item.dataset.mapView === "leaflet"));
+  mapViews.forEach((item) => item.classList.toggle("active", item.dataset.view === "leaflet"));
+  initLeafletMap();
+  leafletLocationBanner.classList.add("active");
+  leafletLocationBanner.textContent = "Haga clic sobre Leaflet/OpenStreetMap para ubicar la reunion.";
 });
 
 territorySvg.addEventListener("click", (event) => {

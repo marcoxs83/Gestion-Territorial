@@ -761,6 +761,7 @@ h2 {
 .insight-grid,
 .infrastructure-grid,
 .people-grid,
+.meeting-grid,
 .report-grid,
 .role-grid {
   display: grid;
@@ -772,6 +773,7 @@ h2 {
 .insight-card,
 .infrastructure-card,
 .person-card,
+.meeting-card,
 .report-card,
 .role-card {
   min-width: 0;
@@ -954,6 +956,47 @@ h2 {
   margin: 8px 0;
 }
 
+.meeting-card {
+  display: grid;
+  gap: 12px;
+}
+
+.meeting-card header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.meeting-card header span {
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.meeting-card p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.meeting-card dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.meeting-card dt {
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.meeting-card dd {
+  margin: 2px 0 0;
+}
+
 .avatar {
   display: grid;
   width: 44px;
@@ -1078,6 +1121,11 @@ h2 {
 .form-grid textarea {
   resize: vertical;
   padding: 10px;
+}
+
+.form-grid select[multiple] {
+  min-height: 116px;
+  padding: 8px;
 }
 
 .form-wide {
@@ -1219,6 +1267,7 @@ h2 {
   .insight-grid,
   .infrastructure-grid,
   .people-grid,
+  .meeting-grid,
   .report-grid,
   .role-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1289,6 +1338,7 @@ h2 {
   .insight-grid,
   .infrastructure-grid,
   .people-grid,
+  .meeting-grid,
   .report-grid,
   .role-grid,
   .form-grid {

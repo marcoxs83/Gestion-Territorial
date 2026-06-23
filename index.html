@@ -43,6 +43,10 @@
             <span aria-hidden="true">R</span>
             <span>Referentes</span>
           </button>
+          <button class="nav-item" type="button" data-section="reuniones" title="Historial de reuniones">
+            <span aria-hidden="true">H</span>
+            <span>Reuniones</span>
+          </button>
           <button class="nav-item" type="button" data-section="reportes" title="Reportes y estadisticas">
             <span aria-hidden="true">E</span>
             <span>Reportes</span>
@@ -352,6 +356,57 @@
             </div>
           </form>
           <div class="people-grid" id="peopleGrid"></div>
+        </section>
+
+        <section class="module" id="module-reuniones" data-title="Historial de reuniones">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Memoria territorial</p>
+              <h2>Historial de reuniones</h2>
+            </div>
+          </div>
+          <form class="entry-form" id="meetingForm">
+            <div class="form-grid">
+              <label>
+                Titulo de la reunion
+                <input name="title" required placeholder="Ej. Mesa barrial por obras y servicios" />
+              </label>
+              <label>
+                Fecha
+                <input name="date" type="date" required />
+              </label>
+              <label>
+                Barrio o distrito
+                <select name="neighborhood" id="meetingNeighborhood" required></select>
+              </label>
+              <label>
+                Cantidad de participantes
+                <input name="attendeeCount" type="number" min="1" required placeholder="Ej. 24" />
+              </label>
+              <label class="form-wide">
+                Principales participantes
+                <select name="participants" id="meetingParticipants" multiple></select>
+              </label>
+              <div class="form-wide location-fields">
+                <label>
+                  Lugar de la reunion
+                  <input name="locationLabel" readonly placeholder="Sin georreferenciar" />
+                </label>
+                <input name="lat" type="hidden" />
+                <input name="lng" type="hidden" />
+                <button class="secondary-button" id="pickMeetingLocation" type="button">Georreferenciar reunion</button>
+              </div>
+              <label class="form-wide">
+                Temas tratados
+                <textarea name="topics" rows="4" required placeholder="Principales temas, pedidos, acuerdos o compromisos"></textarea>
+              </label>
+            </div>
+            <div class="form-actions">
+              <button class="secondary-button" type="reset">Limpiar</button>
+              <button class="primary-button" type="submit">Guardar reunion</button>
+            </div>
+          </form>
+          <div class="meeting-grid" id="meetingGrid"></div>
         </section>
 
         <section class="module" id="module-reportes" data-title="Reportes y estadisticas">
