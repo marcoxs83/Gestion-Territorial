@@ -269,9 +269,13 @@ function saveCollection(key, value) {
 
 function getDatabaseConfig() {
   return {
-    url: localStorage.getItem(storageKeys.supabaseUrl) || "",
+    url: normalizeSupabaseUrl(localStorage.getItem(storageKeys.supabaseUrl) || ""),
     anonKey: localStorage.getItem(storageKeys.supabaseAnonKey) || "",
   };
+}
+
+function normalizeSupabaseUrl(url) {
+  return url.trim().replace(/\/rest\/v1\/?$/i, "").replace(/\/$/, "");
 }
 
 function isDatabaseConfigured() {
@@ -341,7 +345,7 @@ function referentFromDb(item) {
 
 async function supabaseRequest(table, options = {}) {
   const config = getDatabaseConfig();
-  const url = `${config.url.replace(/\/$/, "")}/rest/v1/${table}${options.query || ""}`;
+  const url = `${normalizeSupabaseUrl(config.url)}/rest/v1/${table}${options.query || ""}`;
 
   const response = await fetch(url, {
     method: options.method || "GET",
@@ -934,7 +938,7 @@ referentForm.addEventListener("submit", addReferent);
 
 databaseForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  const url = formValue(databaseForm, "url");
+  const url = normalizeSupabaseUrl(formValue(databaseForm, "url"));
   const anonKey = formValue(databaseForm, "anonKey");
 
   localStorage.setItem(storageKeys.supabaseUrl, url);
