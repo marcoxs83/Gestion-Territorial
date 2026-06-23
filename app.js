@@ -156,10 +156,10 @@ const agenda = [
 ];
 
 const defaultReferents = [
-  { name: "Ana Molina", neighborhood: "Distrito Costanera Km 1-2", phone: "+54 9 3751 420-184", influence: "Sector ribereno", meetings: "Ultima reunion: 20 Jun" },
-  { name: "Carlos Vera", neighborhood: "Distrito Oeste Km 5-6", phone: "+54 9 3751 389-277", influence: "Barrio Sarmiento y alrededores", meetings: "Ultima reunion: 17 Jun" },
-  { name: "Lucia Pereyra", neighborhood: "Distrito Belgrano Km 7-8", phone: "+54 9 3751 542-166", influence: "Corredor escolar", meetings: "Ultima reunion: 12 Jun" },
-  { name: "Mario Benitez", neighborhood: "Distrito Pinares y Roulet", phone: "+54 9 3751 612-044", influence: "Pinares, Roulet y borde sur", meetings: "Ultima reunion: 08 Jun" },
+  { name: "Ana Molina", neighborhood: "Distrito Costanera Km 1-2", phone: "+54 9 3751 420-184", communityRole: "Referente comunitaria", influence: "Sector ribereno", meetings: "Ultima reunion: 20 Jun" },
+  { name: "Carlos Vera", neighborhood: "Distrito Oeste Km 5-6", phone: "+54 9 3751 389-277", communityRole: "Delegado barrial", influence: "Barrio Sarmiento y alrededores", meetings: "Ultima reunion: 17 Jun" },
+  { name: "Lucia Pereyra", neighborhood: "Distrito Belgrano Km 7-8", phone: "+54 9 3751 542-166", communityRole: "Promotora territorial", influence: "Corredor escolar", meetings: "Ultima reunion: 12 Jun" },
+  { name: "Mario Benitez", neighborhood: "Distrito Pinares y Roulet", phone: "+54 9 3751 612-044", communityRole: "Presidente de comision vecinal", influence: "Pinares, Roulet y borde sur", meetings: "Ultima reunion: 08 Jun" },
 ];
 
 const roles = [
@@ -328,6 +328,7 @@ function referentToDb(item) {
     name: item.name,
     neighborhood: item.neighborhood,
     phone: item.phone,
+    community_role: item.communityRole || "",
     influence: item.influence,
     meetings: item.meetings,
   };
@@ -338,6 +339,7 @@ function referentFromDb(item) {
     name: item.name,
     neighborhood: item.neighborhood,
     phone: item.phone,
+    communityRole: item.community_role || item.communityRole || "",
     influence: item.influence,
     meetings: item.meetings,
   };
@@ -761,7 +763,7 @@ function renderDemands() {
 
 function renderReferents() {
   peopleGrid.innerHTML = referents
-    .filter((item) => matchesQuery([item.name, item.neighborhood, item.influence]))
+    .filter((item) => matchesQuery([item.name, item.neighborhood, item.communityRole || "", item.influence]))
     .map(
       (item) => `
         <article class="person-card">
@@ -769,6 +771,7 @@ function renderReferents() {
           <div>
             <strong>${escapeHtml(item.name)}</strong>
             <span>${escapeHtml(item.neighborhood)}</span>
+            <em>${escapeHtml(item.communityRole || "Funcion no especificada")}</em>
             <p>${escapeHtml(item.phone)}</p>
             <small>${escapeHtml(item.influence)} · ${escapeHtml(item.meetings)}</small>
           </div>
@@ -886,6 +889,7 @@ async function addReferent(event) {
     name: formValue(referentForm, "name"),
     neighborhood: formValue(referentForm, "neighborhood"),
     phone: formValue(referentForm, "phone"),
+    communityRole: formValue(referentForm, "communityRole"),
     influence: formValue(referentForm, "influence"),
     meetings: formValue(referentForm, "meetings"),
   };

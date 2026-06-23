@@ -927,6 +927,7 @@ h2 {
 
 .person-card strong,
 .person-card span,
+.person-card em,
 .person-card small {
   display: block;
 }
@@ -935,6 +936,18 @@ h2 {
 .person-card small,
 .person-card p {
   color: var(--muted);
+}
+
+.person-card em {
+  width: fit-content;
+  margin-top: 7px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: var(--surface-strong);
+  color: var(--green-dark);
+  font-size: 0.8rem;
+  font-style: normal;
+  font-weight: 800;
 }
 
 .person-card p {

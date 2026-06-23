@@ -20,10 +20,14 @@ create table if not exists public.referents (
   name text not null,
   neighborhood text not null,
   phone text not null,
+  community_role text,
   influence text not null,
   meetings text not null,
   created_at timestamptz not null default now()
 );
+
+alter table public.referents
+add column if not exists community_role text;
 
 alter table public.demands enable row level security;
 alter table public.referents enable row level security;
