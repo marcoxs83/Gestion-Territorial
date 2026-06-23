@@ -647,6 +647,22 @@ h2 {
   display: block;
 }
 
+.map-layer-note {
+  position: absolute;
+  z-index: 500;
+  right: 14px;
+  bottom: 24px;
+  max-width: min(360px, calc(100% - 28px));
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  box-shadow: 0 10px 22px rgba(31, 43, 41, 0.1);
+}
+
 .legend {
   display: flex;
   gap: 14px;

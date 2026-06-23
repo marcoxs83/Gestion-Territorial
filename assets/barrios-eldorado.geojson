@@ -1,0 +1,61 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "name": "Distrito Costanera Km 1-2", "priority": "Media" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[-54.6715, -26.3948], [-54.6498, -26.3916], [-54.6424, -26.4008], [-54.6506, -26.4127], [-54.6719, -26.4101], [-54.6781, -26.4012], [-54.6715, -26.3948]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Distrito Centro Km 3-4", "priority": "Alta" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[-54.6432, -26.3921], [-54.6208, -26.3952], [-54.6164, -26.4078], [-54.6296, -26.4164], [-54.6441, -26.4057], [-54.6432, -26.3921]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Distrito Oeste Km 5-6", "priority": "Alta" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[-54.6758, -26.4126], [-54.6502, -26.4146], [-54.6359, -26.4269], [-54.6427, -26.4438], [-54.6681, -26.4397], [-54.6813, -26.4274], [-54.6758, -26.4126]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Distrito Belgrano Km 7-8", "priority": "Media" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[-54.6336, -26.4183], [-54.6125, -26.4111], [-54.5926, -26.4205], [-54.5978, -26.4372], [-54.6237, -26.4445], [-54.6416, -26.4337], [-54.6336, -26.4183]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Distrito Centro Civico Km 9", "priority": "Baja" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[-54.6688, -26.4418], [-54.6418, -26.4461], [-54.6237, -26.4482], [-54.6296, -26.4623], [-54.6629, -26.4626], [-54.6763, -26.4521], [-54.6688, -26.4418]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Distrito Pinares y Roulet", "priority": "Media" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[-54.6224, -26.4477], [-54.5969, -26.4399], [-54.5814, -26.4519], [-54.5928, -26.4685], [-54.6265, -26.4662], [-54.6224, -26.4477]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Zona Este RN12", "priority": "Alta" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[-54.6171, -26.3934], [-54.5882, -26.3992], [-54.5798, -26.4167], [-54.5934, -26.4211], [-54.6142, -26.4097], [-54.6171, -26.3934]]]
+      }
+    }
+  ]
+}

@@ -257,6 +257,7 @@ let googleScriptLoading = false;
 let googleDemandMarkers = [];
 let leafletMap = null;
 let leafletDemandLayer = null;
+let leafletNeighborhoodLayer = null;
 let leafletDraftMarker = null;
 let pickMode = "operativo";
 let locationPickTarget = "demand";
@@ -656,6 +657,7 @@ function initLeafletMap() {
   });
 
   renderLeafletDemandMarkers();
+  renderLeafletNeighborhoods();
 }
 
 function renderLeafletDemandMarkers() {
@@ -668,6 +670,53 @@ function renderLeafletDemandMarkers() {
       .bindPopup(`<strong>${escapeHtml(item.code)}</strong><br>${escapeHtml(item.title)}`)
       .addTo(leafletDemandLayer);
   });
+}
+
+function neighborhoodDemandCount(name) {
+  return demands.filter((item) => item.neighborhood === name && item.status !== "resuelto").length;
+}
+
+function neighborhoodColor(count, priority) {
+  if (count >= 6 || priority === "Alta") return "#b94b45";
+  if (count >= 3 || priority === "Media") return "#c2842f";
+  return "#2f7d62";
+}
+
+function renderLeafletNeighborhoods() {
+  if (!leafletMap || !window.L) return;
+
+  fetch("assets/barrios-eldorado.geojson")
+    .then((response) => response.json())
+    .then((geojson) => {
+      if (leafletNeighborhoodLayer) {
+        leafletNeighborhoodLayer.remove();
+      }
+
+      leafletNeighborhoodLayer = L.geoJSON(geojson, {
+        style: (feature) => {
+          const count = neighborhoodDemandCount(feature.properties.name);
+          return {
+            color: "#ffffff",
+            fillColor: neighborhoodColor(count, feature.properties.priority),
+            fillOpacity: 0.36,
+            opacity: 0.95,
+            weight: 2,
+          };
+        },
+        onEachFeature: (feature, layer) => {
+          const count = neighborhoodDemandCount(feature.properties.name);
+          layer.bindTooltip(`${feature.properties.name}: ${count} demandas activas`);
+          layer.on("mouseover", () => layer.setStyle({ fillOpacity: 0.55, weight: 3 }));
+          layer.on("mouseout", () => leafletNeighborhoodLayer.resetStyle(layer));
+        },
+      }).addTo(leafletMap);
+
+      leafletNeighborhoodLayer.bringToBack();
+    })
+    .catch(() => {
+      leafletLocationBanner.classList.add("active");
+      leafletLocationBanner.textContent = "No se pudo cargar la capa de barrios.";
+    });
 }
 
 function googleMapsReady() {
@@ -963,6 +1012,7 @@ function renderAll() {
   renderInfrastructure();
   renderDemands();
   renderDemandMarkers();
+  renderLeafletNeighborhoods();
   renderLeafletDemandMarkers();
   renderGoogleDemandMarkers();
   populateMeetingParticipants();
